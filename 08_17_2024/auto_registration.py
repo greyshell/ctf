@@ -24,7 +24,7 @@ proxies = {
 burp_proxy_flag = False
 
 
-# helper function
+# helper function: compact json body
 def remove_spaces_from_json(obj):
     if isinstance(obj, dict):
         # Recursively remove spaces from dictionary
