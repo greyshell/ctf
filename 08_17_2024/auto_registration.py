@@ -115,6 +115,64 @@ def send_post_request(post_params, session):
                            allow_redirects=True)
 
 
+def verify_login(email, password):
+    global url, headers, proxies, burp_proxy_flag
+
+    # Create a Session object
+    session = requests.Session()
+    # print(f"[+] user login flow")
+    # print("")
+
+    # send GET request at /users/log_in
+    if burp_proxy_flag:
+        res = session.get(url=url + "users/log_in", headers=headers, proxies=proxies)
+    else:
+        res = session.get(url=url + "users/log_in", headers=headers)
+    # print(f"1. [GET /users/log_in]: {res.status_code}")
+
+    cookies = session.cookies.get_dict()
+    # print(f"_frat_test_web_user_tracker: {cookies['_frat_test_web_user_tracker']}")
+    # print(f"_frat_test_v2_key: {cookies['_frat_test_v2_key']}")
+
+    # get csrf token
+    search_string = 'csrf-token" content='
+    res_text = res.text
+    start_index = res_text.find(search_string)
+    _csrf_token = res_text[start_index + 21:start_index + 77]
+    # print(f"_csrf token: {_csrf_token}")
+    # print()
+
+    # send the POST request at users/log_in and redirects to /login_challenge
+    data = {
+        "_csrf_token": _csrf_token,
+        "user[email]": email,
+        "user[password]": password,
+        "user[remember_me]": "false"
+
+    }
+    # setting headers
+    headers["Origin"] = url[:len(url) - 1]
+    headers["Referer"] = url + "users/log_in"
+    headers["Cache-Control"] = "max-age=0"
+    headers["Accept-Language"] = "en-US"
+
+    if burp_proxy_flag:
+        res = session.post(url=url + "users/log_in", data=data, headers=headers, proxies=proxies, allow_redirects=False)
+    else:
+        res = session.post(url=url + "users/log_in", data=data, headers=headers, allow_redirects=False)
+
+    if "/login_challenge" in res.text:
+        print("[+] login successful")
+        return True
+    else:
+        if "/users/log_in" in res.text:
+            print("[x] login unsuccessful")
+        else:
+            print("[*] received new value")
+
+        return False
+
+
 async def websocket_requests(topic_number, initial_sequence_number, topic_name, csrf_token, phx_session, phx_static,
                              email, password, session):
     # print(f"[+] websocket flow")
@@ -235,71 +293,10 @@ async def websocket_requests(topic_number, initial_sequence_number, topic_name, 
         return post_params_
 
 
-def login(email, password):
-    global url, headers, proxies, burp_proxy_flag
-
-    # Create a Session object
-    session = requests.Session()
-    # print(f"[+] user login flow")
-    # print("")
-
-    # send GET request at /users/log_in
-    if burp_proxy_flag:
-        res = session.get(url=url + "users/log_in", headers=headers, proxies=proxies)
-    else:
-        res = session.get(url=url + "users/log_in", headers=headers)
-    # print(f"1. [GET /users/log_in]: {res.status_code}")
-
-    cookies = session.cookies.get_dict()
-    # print(f"_frat_test_web_user_tracker: {cookies['_frat_test_web_user_tracker']}")
-    # print(f"_frat_test_v2_key: {cookies['_frat_test_v2_key']}")
-
-    # get csrf token
-    search_string = 'csrf-token" content='
-    res_text = res.text
-    start_index = res_text.find(search_string)
-    _csrf_token = res_text[start_index + 21:start_index + 77]
-    # print(f"_csrf token: {_csrf_token}")
-    # print()
-
-    # send the POST request at users/log_in and redirects to /login_challenge
-    data = {
-        "_csrf_token": _csrf_token,
-        "user[email]": email,
-        "user[password]": password,
-        "user[remember_me]": "false"
-
-    }
-    # setting headers
-    headers["Origin"] = url[:len(url) - 1]
-    headers["Referer"] = url + "users/log_in"
-    headers["Cache-Control"] = "max-age=0"
-    headers["Accept-Language"] = "en-US"
-
-    if burp_proxy_flag:
-        res = session.post(url=url + "users/log_in", data=data, headers=headers, proxies=proxies, allow_redirects=False)
-    else:
-        res = session.post(url=url + "users/log_in", data=data, headers=headers, allow_redirects=False)
-
-    if "/login_challenge" in res.text:
-        print("[+] login successful")
-        return True
-    else:
-        if "/users/log_in" in res.text:
-            print("[x] login unsuccessful")
-        else:
-            print("[*] received new value")
-
-        return False
-
-
 if __name__ == '__main__':
 
-    first_name = "abhijit"
-    last_name = "sinha"
-
-    first_letter_of_first_name = first_name[0]
-    first_letter_of_last_name = last_name[0]
+    first_letter_of_first_name = "g"
+    first_letter_of_last_name = "s"
 
     # accept same number
     topic_number = initial_sequence_number = 4
@@ -324,7 +321,7 @@ if __name__ == '__main__':
 
         print(f"[=] trying to create an account for {email}")
 
-        result = login(email, password)
+        result = verify_login(email, password)
 
         if result:
             print(f"{counter}. {email} account created")
