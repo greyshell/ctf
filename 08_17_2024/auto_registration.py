@@ -295,13 +295,13 @@ async def websocket_requests(topic_number, initial_sequence_number, topic_name, 
 
 if __name__ == '__main__':
 
-    first_letter_of_first_name = "g"
-    first_letter_of_last_name = "s"
+    first_letter_of_first_name = "gg"
+    first_letter_of_last_name = "ss"
 
     # accept same number
     topic_number = initial_sequence_number = 4
 
-    total_accounts = 20
+    total_accounts = 5
 
     counter = 1
     while counter <= total_accounts:
