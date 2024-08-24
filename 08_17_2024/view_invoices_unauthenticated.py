@@ -74,8 +74,6 @@ async def websocket_requests(topic_number, initial_sequence_number, encoded_emai
     ws_url = "ws://138.197.38.125:4001/socket/websocket?token=undefined&vsn=2.0.2"
     #
     ws_headers = {
-        # "Cookie": f"_frat_test_web_user_tracker={session.cookies['_frat_test_web_user_tracker']};_frat_test_v2_key={session.cookies['_frat_test_v2_key']}",
-        # "Upgrade": "websocket",
         "Origin": "http://attacker.com:4001",
     }
 
